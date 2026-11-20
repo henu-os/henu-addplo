@@ -38,10 +38,55 @@ export default function NewApplicationPage() {
   // GitHub Repository Linkage
   const [repoOwner, setRepoOwner] = useState("henu-os");
   const [repoName, setRepoName] = useState("");
-  const [githubInstallationId, setGithubInstallationId] = useState("123456");
+  const [githubInstallationId, setGithubInstallationId] = useState("183938025");
   const [assetPattern, setAssetPattern] = useState(
     "^henu-(.+)-(windows|macos|linux)-(x64|arm64|universal)\\.(exe|msi|dmg|pkg|deb|rpm|appimage)$",
   );
+  const [validatingRepo, setValidatingRepo] = useState(false);
+  const [repoValidationResult, setRepoValidationResult] = useState<{
+    success: boolean;
+    message: string;
+  } | null>(null);
+
+  const handleTestRepoConnection = async () => {
+    if (!repoOwner.trim() || !repoName.trim()) {
+      setRepoValidationResult({
+        success: false,
+        message: "Please enter both GitHub Owner and Repository Name first.",
+      });
+      return;
+    }
+
+    setValidatingRepo(true);
+    setRepoValidationResult(null);
+
+    try {
+      const res = await api.validateRepository({
+        repoOwner: repoOwner.trim().toLowerCase(),
+        repoName: repoName.trim().toLowerCase(),
+        githubInstallationId: Number(githubInstallationId) || 183938025,
+      });
+
+      if (res.valid) {
+        setRepoValidationResult({
+          success: true,
+          message: `✓ Verified: ${res.repoFullName} is accessible by HENU Release Manager (${res.defaultBranch} branch, ${res.isPrivate ? "private" : "public"}).`,
+        });
+      } else {
+        setRepoValidationResult({
+          success: false,
+          message: res.message || "Repository access validation failed.",
+        });
+      }
+    } catch (err: any) {
+      setRepoValidationResult({
+        success: false,
+        message: err.message || "Failed to validate repository access.",
+      });
+    } finally {
+      setValidatingRepo(false);
+    }
+  };
 
   // Platform Compatibility Selections
   const [selectedOS, setSelectedOS] = useState<string[]>([
@@ -109,11 +154,11 @@ export default function NewApplicationPage() {
       // 2. Register GitHub Repository Connection (optional / non-blocking)
       if (repoOwner.trim() && repoName.trim()) {
         try {
-          await api.createRepository({
+          const createdConn = await api.createRepository({
             applicationId: createdApp.id,
             repoOwner: repoOwner.trim().toLowerCase(),
             repoName: repoName.trim().toLowerCase(),
-            githubInstallationId: Number(githubInstallationId) || 123456,
+            githubInstallationId: Number(githubInstallationId) || 183938025,
             assetPattern: assetPattern.trim(),
             autoIngestReleases: true,
             autoPublishChannels: ["BETA"],
@@ -121,10 +166,12 @@ export default function NewApplicationPage() {
           });
 
           // 3. Trigger initial repository access verification
-          try {
-            await api.syncRepository(createdApp.id);
-          } catch {
-            // Non-blocking sync check
+          if (createdConn?.id) {
+            try {
+              await api.syncRepository(createdConn.id);
+            } catch {
+              // Non-blocking sync check
+            }
           }
         } catch (repoErr: any) {
           console.warn("Repository connection note:", repoErr);
@@ -433,6 +480,30 @@ export default function NewApplicationPage() {
                 Regular expression used to classify and extract OS,
                 architecture, and format from binary filenames.
               </p>
+            </div>
+
+            {/* Test Connection Button & Result */}
+            <div className="md:col-span-2 pt-2 border-t border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              <button
+                type="button"
+                onClick={handleTestRepoConnection}
+                disabled={validatingRepo}
+                className="inline-flex items-center justify-center px-4 py-2 border border-slate-300 shadow-xs text-xs font-medium rounded-lg text-slate-700 bg-white hover:bg-slate-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-henu-500 disabled:opacity-50"
+              >
+                {validatingRepo ? "Checking GitHub Access..." : "Test GitHub Connection"}
+              </button>
+
+              {repoValidationResult && (
+                <div
+                  className={`text-xs px-3 py-1.5 rounded-lg flex items-center font-medium ${
+                    repoValidationResult.success
+                      ? "bg-emerald-50 text-emerald-700 border border-emerald-200"
+                      : "bg-rose-50 text-rose-700 border border-rose-200"
+                  }`}
+                >
+                  {repoValidationResult.message}
+                </div>
+              )}
             </div>
           </div>
         </Card>

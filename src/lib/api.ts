@@ -102,15 +102,25 @@ class ApiClient {
     let response = await fetch(url, { ...options, headers });
 
     // Handle token refresh on 401
+    const isAuthExempt =
+      endpoint.startsWith("/auth/login") ||
+      endpoint.startsWith("/auth/refresh") ||
+      endpoint.startsWith("/auth/mfa");
+
     if (
       response.status === 401 &&
       this.refreshToken &&
-      !endpoint.includes("/auth/")
+      !isAuthExempt
     ) {
       const refreshed = await this.tryRefreshToken();
       if (refreshed) {
         headers.set("Authorization", `Bearer ${this.accessToken}`);
         response = await fetch(url, { ...options, headers });
+      } else {
+        this.clearTokens();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("henu:auth-expired"));
+        }
       }
     }
 
@@ -323,6 +333,24 @@ class ApiClient {
     if (params.applicationId) query.set("applicationId", params.applicationId);
 
     return this.request(`/admin/repositories?${query.toString()}`);
+  }
+
+  async validateRepository(payload: {
+    repoOwner: string;
+    repoName: string;
+    githubInstallationId?: number;
+  }): Promise<{
+    valid: boolean;
+    repoFullName: string;
+    defaultBranch: string;
+    isPrivate: boolean;
+    permissions: Record<string, boolean>;
+    message: string;
+  }> {
+    return this.request("/admin/repositories/validate", {
+      method: "POST",
+      body: JSON.stringify(payload),
+    });
   }
 
   async createRepository(

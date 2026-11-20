@@ -30,14 +30,31 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           const fresh = await api.getCurrentUser();
           setUser(fresh);
-        } catch {
-          // Token may have expired or backend unreachable
+        } catch (err: any) {
+          // If 401 or token expired, clear tokens and force re-login
+          if (err?.status === 401 || err?.message?.includes("expired") || err?.message?.includes("invalid")) {
+            api.clearTokens();
+            setUser(null);
+          }
         }
       }
       setLoading(false);
     }
     initAuth();
-  }, []);
+
+    // Listen for auth expiration events from ApiClient
+    const handleAuthExpired = () => {
+      setUser(null);
+      if (pathname !== "/login") {
+        router.push("/login");
+      }
+    };
+
+    window.addEventListener("henu:auth-expired", handleAuthExpired);
+    return () => {
+      window.removeEventListener("henu:auth-expired", handleAuthExpired);
+    };
+  }, [pathname, router]);
 
   // Route protection
   useEffect(() => {
