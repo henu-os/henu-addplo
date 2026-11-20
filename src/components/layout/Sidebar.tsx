@@ -19,6 +19,7 @@ import {
   BellRing,
   Settings,
   Sparkles,
+  HelpCircle,
 } from "lucide-react";
 
 interface NavItem {
@@ -142,21 +143,38 @@ export const Sidebar: React.FC = () => {
         },
       ],
     },
+    {
+      title: "Organization & Support",
+      items: [
+        {
+          name: "Company & Helpdesk",
+          href: "/support",
+          icon: <HelpCircle className="w-4 h-4" />,
+        },
+      ],
+    },
   ];
 
   return (
     <aside className="w-64 bg-white border-r border-slate-200 flex flex-col h-screen fixed left-0 top-0 z-30 select-none">
       {/* Brand header */}
       <div className="h-16 px-6 flex items-center gap-3 border-b border-slate-100 flex-shrink-0">
-        <div className="w-8 h-8 rounded-lg bg-henu-600 flex items-center justify-center text-white font-bold text-sm tracking-wider shadow-sm">
-          H
+        <div className="w-9 h-9 rounded-xl bg-henu-brand flex items-center justify-center p-1.5 shadow-sm shadow-indigo-200">
+          <img
+            src="/henu-logo.png"
+            alt="HENU OS"
+            className="w-full h-full object-contain"
+            onError={(e) => {
+              (e.target as HTMLElement).style.display = 'none';
+            }}
+          />
         </div>
         <div>
-          <span className="font-bold text-slate-900 text-sm tracking-tight">
+          <span className="font-bold text-henu-ink text-sm tracking-tight">
             HENU OS
           </span>
-          <span className="ml-1.5 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-henu-50 text-henu-700 border border-henu-200">
-            Admin
+          <span className="ml-1.5 text-[10px] font-semibold uppercase px-1.5 py-0.5 rounded bg-henu-100 text-henu-brand border border-henu-200">
+            Console
           </span>
         </div>
       </div>

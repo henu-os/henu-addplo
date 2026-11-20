@@ -61,21 +61,18 @@ export default function NewApplicationPage() {
 
   const handleSlugAutoFill = (val: string) => {
     setName(val);
-    if (!slug) {
-      setSlug(
-        val
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, ""),
-      );
+    const generatedSlug = val
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    if (!slug || slug === "") {
+      setSlug(generatedSlug);
     }
-    if (!repoName) {
-      setRepoName(
-        val
-          .toLowerCase()
-          .replace(/[^a-z0-9]+/g, "-")
-          .replace(/^-|-$/g, ""),
-      );
+    if (!repoName || repoName === "") {
+      setRepoName(generatedSlug);
+    }
+    if (!iconUrl || iconUrl === "") {
+      setIconUrl(`https://cdn.henuos.example/assets/icons/${generatedSlug || "app"}.svg`);
     }
   };
 
@@ -86,43 +83,51 @@ export default function NewApplicationPage() {
     setLoading(true);
 
     try {
+      const cleanSlug = slug.trim().toLowerCase();
+      const defaultIcon =
+        iconUrl.trim() ||
+        `https://cdn.henuos.example/assets/icons/${cleanSlug || "app"}.svg`;
+
       // 1. Create Application in Platform API
       const createdApp = await api.createApplication({
-        slug: slug.trim().toLowerCase(),
+        slug: cleanSlug,
         displayName: name.trim(),
         appType: appType as any,
         category,
         summary: summary.trim(),
         description: description.trim(),
-        iconUrl: iconUrl.trim(),
+        iconUrl: defaultIcon,
         bannerUrl: bannerUrl.trim() || undefined,
-        minHubVersion: minHubVersion.trim(),
+        minHubVersion: minHubVersion.trim() || "1.0.0",
         webAppUrl:
           appType === "WEB" || appType === "HYBRID"
             ? webAppUrl.trim()
             : undefined,
         status: status as any,
-        visibility: visibility as any,
       });
 
-      // 2. Register GitHub Repository Connection
-      if (repoOwner && repoName) {
-        await api.createRepository({
-          applicationId: createdApp.id,
-          repoOwner: repoOwner.trim().toLowerCase(),
-          repoName: repoName.trim().toLowerCase(),
-          githubInstallationId: Number(githubInstallationId),
-          assetPattern: assetPattern.trim(),
-          autoIngestReleases: true,
-          autoPublishChannels: ["BETA"],
-          isActive: true,
-        });
-
-        // 3. Trigger initial repository access verification
+      // 2. Register GitHub Repository Connection (optional / non-blocking)
+      if (repoOwner.trim() && repoName.trim()) {
         try {
-          await api.syncRepository(createdApp.id);
-        } catch {
-          // Non-blocking sync check
+          await api.createRepository({
+            applicationId: createdApp.id,
+            repoOwner: repoOwner.trim().toLowerCase(),
+            repoName: repoName.trim().toLowerCase(),
+            githubInstallationId: Number(githubInstallationId) || 123456,
+            assetPattern: assetPattern.trim(),
+            autoIngestReleases: true,
+            autoPublishChannels: ["BETA"],
+            isActive: true,
+          });
+
+          // 3. Trigger initial repository access verification
+          try {
+            await api.syncRepository(createdApp.id);
+          } catch {
+            // Non-blocking sync check
+          }
+        } catch (repoErr: any) {
+          console.warn("Repository connection note:", repoErr);
         }
       }
 
@@ -133,7 +138,14 @@ export default function NewApplicationPage() {
         router.push(`/apps/${createdApp.id}`);
       }, 1500);
     } catch (err: any) {
-      setError(err.message || "Failed to create application.");
+      if (Array.isArray(err.errors) && err.errors.length > 0) {
+        setError(err.errors.join(" • "));
+      } else if (typeof err.errors === "object" && err.errors !== null) {
+        const msgs = Object.values(err.errors).flat();
+        setError(msgs.length > 0 ? (msgs as string[]).join(" • ") : err.message);
+      } else {
+        setError(err.message || "Failed to create application.");
+      }
     } finally {
       setLoading(false);
     }
@@ -278,17 +290,34 @@ export default function NewApplicationPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-700 mb-1">
-                Icon URL <span className="text-rose-500">*</span>
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-semibold text-slate-700">
+                  Icon URL
+                </label>
+                {!iconUrl && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setIconUrl(
+                        `https://cdn.henuos.example/assets/icons/${slug || "app"}.svg`,
+                      )
+                    }
+                    className="text-[11px] text-henu-600 hover:text-henu-700 font-medium"
+                  >
+                    Set Default SVG
+                  </button>
+                )}
+              </div>
               <input
-                type="url"
-                required
+                type="text"
                 value={iconUrl}
                 onChange={(e) => setIconUrl(e.target.value)}
-                placeholder="https://cdn.henuos.com/assets/icons/app.svg"
+                placeholder="https://cdn.henuos.example/assets/icons/app.svg"
                 className="w-full text-sm rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-henu-500"
               />
+              <p className="text-[11px] text-slate-400 mt-1">
+                Leave blank to automatically use standard brand SVG asset.
+              </p>
             </div>
 
             <div>
@@ -296,10 +325,10 @@ export default function NewApplicationPage() {
                 Banner URL (Optional)
               </label>
               <input
-                type="url"
+                type="text"
                 value={bannerUrl}
                 onChange={(e) => setBannerUrl(e.target.value)}
-                placeholder="https://cdn.henuos.com/assets/banners/app.png"
+                placeholder="https://cdn.henuos.example/assets/banners/app.png"
                 className="w-full text-sm rounded-lg border border-slate-300 px-3 py-2 focus:outline-none focus:ring-1 focus:ring-henu-500"
               />
             </div>

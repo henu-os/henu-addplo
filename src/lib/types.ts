@@ -10,15 +10,19 @@ export interface AdminUser {
   id: string;
   email: string;
   fullName: string;
-  role: {
-    id: string;
-    name: SystemRole;
-    description?: string;
-  };
-  isActive: boolean;
+  role:
+    | {
+        id: string;
+        name: SystemRole;
+        description?: string;
+      }
+    | SystemRole
+    | string;
+  isActive?: boolean;
   mfaEnabled: boolean;
+  permissions?: string[];
   lastLoginAt?: string;
-  createdAt: string;
+  createdAt?: string;
 }
 
 export interface AuthTokens {
@@ -29,6 +33,10 @@ export interface AuthTokens {
 export interface LoginResponse {
   mfaRequired?: boolean;
   mfaToken?: string;
+  tempToken?: string;
+  accessToken?: string;
+  refreshToken?: string;
+  expiresIn?: string;
   user?: AdminUser;
   tokens?: AuthTokens;
 }

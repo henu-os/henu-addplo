@@ -94,7 +94,7 @@ export default function AdminUsersPage() {
                   </td>
                   <td className="py-4 px-4">
                     <Badge variant="brand">
-                      {u.role?.name || "ADMINISTRATOR"}
+                      {typeof u.role === "string" ? u.role : u.role?.name || "ADMINISTRATOR"}
                     </Badge>
                   </td>
                   <td className="py-4 px-4">

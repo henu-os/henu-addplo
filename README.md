@@ -1,12 +1,32 @@
-# HENU Admin Panel (`henu-addplo`)
+# HENU Admin Console (`henu-addplo`)
 
-The authoritative administrative control center for the HENU software ecosystem.
+The official enterprise administrative and release control center for **HENU OS PRIVATE LIMITED**.
 
-Built with **Next.js 14 (App Router)**, **React 18**, **TypeScript**, and **Tailwind CSS**, designed desktop-first with a professional HENU light theme (clean white surfaces, neutral slate backgrounds, signature HENU blue brand accents, and consistent typography).
+Built with **Next.js 14 (App Router)**, **React 18**, **TypeScript**, and **Tailwind CSS**, designed desktop-first with official HENU branding:
+- **Brand Purple:** `#6D4AFF`
+- **Lavender:** `#DCD5FF`
+- **Soft Surface:** `#F7F7FB`
+- **Ink Purple:** `#171329`
 
 ---
 
-## Features & Navigation (20 Dedicated Sections)
+## Corporate Governance & Support Directory (`/support`)
+
+- **Company:** HENU OS PRIVATE LIMITED
+- **Official Website:** [https://www.henuos.in/](https://www.henuos.in/)
+- **Corporate Identity Number (CIN):** `U62099RJ2025PTC109150`
+- **GSTIN:** `08AAICH3195C1ZL`
+- **Corporate Headquarters:** Second Floor, 10b-204, Pali Aasan Home, Bhagesar Road, Pali, Rajasthan 306401, India
+- **Operating Hours:** Monday – Saturday, 09:30 AM – 06:30 PM IST (UTC+05:30)
+- **General Enquiries & Scope:** [info@henuos.in](mailto:info@henuos.in)
+- **Technical Operations:** [support.henuos@gmail.com](mailto:support.henuos@gmail.com)
+- **Direct Enterprise Hotline:** `+91 8094100513`
+- **WhatsApp Enterprise:** [https://wa.me/918094100513](https://wa.me/918094100513)
+- **Consultation & Strategy Call:** [https://calendly.com/henuos/30min](https://calendly.com/henuos/30min)
+
+---
+
+## Features & Navigation (21 Dedicated Sections)
 
 1. **Login & Multi-Factor Authentication (`/login`):** Operator login with Argon2id-backed session tokens and standard RFC 6238 TOTP MFA verification with single-use recovery code support.
 2. **Ecosystem Dashboard (`/`):** Real-time operational metrics showing registered applications, connected repositories, latest releases, pending approvals, failed webhook events, and recent audit activity.
@@ -28,6 +48,7 @@ Built with **Next.js 14 (App Router)**, **React 18**, **TypeScript**, and **Tail
 18. **Webhook Events (`/webhooks`):** Ingress delivery history from GitHub, HMAC-SHA256 verification status, and one-click replay for failed events.
 19. **Notification Policies (`/notifications`):** Server-Sent Events (SSE) and outbound webhook dispatch rules for client apps and administrators.
 20. **System Settings & Health (`/settings`):** Real-time infrastructure diagnostics, health probes (`/health/ready`), and active cryptographic security parameters.
+21. **Corporate Governance & Support (`/support`):** Official legal entity records, CIN, GSTIN, headquarters location, operating hours, and categorized support contacts.
 
 ---
 
@@ -72,7 +93,7 @@ The Admin Panel will be available at [http://localhost:3001](http://localhost:30
 ## Production Build & Verification
 
 ```bash
-# Build optimized production bundle
+# Build optimized standalone production bundle
 npm run build
 
 # Start production server on port 3001

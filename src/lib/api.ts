@@ -21,9 +21,18 @@ export class ApiError extends Error {
     public status: number,
     public title: string,
     public detail?: string,
-    public errors?: Record<string, unknown>,
+    public errors?: Record<string, unknown> | string[],
   ) {
-    super(detail || title || `HTTP Error ${status}`);
+    let msg = detail || title || `HTTP Error ${status}`;
+    if (errors) {
+      if (Array.isArray(errors) && errors.length > 0) {
+        msg = `${msg}: ${errors.join(', ')}`;
+      } else if (typeof errors === 'object' && Object.keys(errors).length > 0) {
+        const errorVals = Object.values(errors).flat();
+        msg = `${msg}: ${errorVals.join(', ')}`;
+      }
+    }
+    super(msg);
     this.name = "ApiError";
   }
 }
@@ -137,8 +146,12 @@ class ApiClient {
 
       if (res.ok) {
         const data = await res.json();
-        this.setTokens(data);
-        return true;
+        const accessToken = data.tokens?.accessToken || data.accessToken;
+        const refreshToken = data.tokens?.refreshToken || data.refreshToken;
+        if (accessToken && refreshToken) {
+          this.setTokens({ accessToken, refreshToken });
+          return true;
+        }
       }
     } catch {
       // Refresh failed
@@ -149,29 +162,45 @@ class ApiClient {
 
   // --- Authentication ---
   async login(email: string, password: string): Promise<LoginResponse> {
-    const data = await this.request<LoginResponse>("/auth/login", {
+    const data = await this.request<any>("/auth/login", {
       method: "POST",
       body: JSON.stringify({ email, password }),
     });
 
-    if (data.tokens && data.user) {
-      this.setTokens(data.tokens);
+    const accessToken = data.tokens?.accessToken || data.accessToken;
+    const refreshToken = data.tokens?.refreshToken || data.refreshToken;
+
+    if (accessToken && refreshToken) {
+      this.setTokens({ accessToken, refreshToken });
+    }
+    if (data.user) {
       this.setStoredUser(data.user);
     }
-    return data;
+    return {
+      ...data,
+      mfaToken: data.tempToken || data.mfaToken,
+    };
   }
 
   async mfaVerify(mfaToken: string, code: string): Promise<LoginResponse> {
-    const data = await this.request<LoginResponse>("/auth/mfa/verify", {
+    const data = await this.request<any>("/auth/mfa/verify", {
       method: "POST",
-      body: JSON.stringify({ mfaToken, code }),
+      body: JSON.stringify({ tempToken: mfaToken, code }),
     });
 
-    if (data.tokens && data.user) {
-      this.setTokens(data.tokens);
+    const accessToken = data.tokens?.accessToken || data.accessToken;
+    const refreshToken = data.tokens?.refreshToken || data.refreshToken;
+
+    if (accessToken && refreshToken) {
+      this.setTokens({ accessToken, refreshToken });
+    }
+    if (data.user) {
       this.setStoredUser(data.user);
     }
-    return data;
+    return {
+      ...data,
+      mfaToken: data.tempToken || data.mfaToken,
+    };
   }
 
   async logout(): Promise<void> {

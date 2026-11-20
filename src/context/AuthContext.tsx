@@ -80,8 +80,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const hasRole = (roles: string[]): boolean => {
     if (!user) return false;
-    if (user.role.name === "SUPER_ADMIN") return true;
-    return roles.includes(user.role.name);
+    const roleName = typeof user.role === "string" ? user.role : user.role?.name;
+    if (roleName === "SUPER_ADMIN") return true;
+    return Boolean(roleName && roles.includes(roleName as any));
   };
 
   return (

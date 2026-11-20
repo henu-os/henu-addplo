@@ -34,7 +34,7 @@ export const Header: React.FC = () => {
                 </div>
                 <div className="flex items-center gap-1 text-[10px] text-slate-500">
                   <Shield className="w-3 h-3 text-henu-600" />
-                  <span>{user.role.name}</span>
+                  <span>{typeof user.role === "string" ? user.role : user.role?.name || "ADMINISTRATOR"}</span>
                 </div>
               </div>
             </div>

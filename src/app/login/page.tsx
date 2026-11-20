@@ -18,6 +18,7 @@ export default function LoginPage() {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [logoError, setLogoError] = useState(false);
 
   const handlePasswordSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -60,8 +61,20 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen flex flex-col justify-center py-12 sm:px-6 lg:px-8 bg-slate-50">
       <div className="sm:mx-auto sm:w-full sm:max-w-md text-center">
-        <div className="w-12 h-12 rounded-xl bg-henu-600 text-white font-bold text-xl flex items-center justify-center mx-auto mb-4 shadow-md">
-          H
+        <div className="flex items-center justify-center mx-auto mb-4">
+          {!logoError ? (
+            /* eslint-disable-next-line @next/next/no-img-element */
+            <img
+              src="/henu-logo.png"
+              alt="HENU OS"
+              className="w-14 h-14 object-contain drop-shadow-md rounded-xl"
+              onError={() => setLogoError(true)}
+            />
+          ) : (
+            <div className="w-14 h-14 rounded-xl bg-[#6D4AFF] text-white font-black text-2xl flex items-center justify-center shadow-md">
+              H
+            </div>
+          )}
         </div>
         <h2 className="text-2xl font-bold tracking-tight text-slate-900">
           HENU Platform Administration
